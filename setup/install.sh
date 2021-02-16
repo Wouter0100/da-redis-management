@@ -17,7 +17,7 @@ fi
 # Install php-redis module (if not installed yet)
 if [ ! "$(php -m | grep redis)" ]; then
     wget https://github.com/FriendsOfPHP/pickle/releases/latest/download/pickle.phar -O /tmp/pickle.phar
-    php /tmp/pickle.phar install redis --defaults --save-logs
+    php /tmp/pickle.phar install redis --defaults
     rm /tmp/pickle.phar
 fi
 

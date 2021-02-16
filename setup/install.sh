@@ -1,17 +1,10 @@
 #!/bin/bash
 
 # Install EPEL repository (if needed)
-if [ ! "$(rpm -qa | grep epel-release)" ]; then
-    yum -y install epel-release
-fi
+yum -y install epel-release
 
 # Install redis (if needed)
-if [ ! "$(rpm -qa | grep redis)" ]; then
-    yum -y install redis
-fi
-
-# Determine PHP version
-PHP_VERSION=$(php -i | grep 'PHP Version');
+yum -y install redis
 
 # Remount /tmp with execute permissions (only if /tmp partition exists and is read-only)
 REMOUNT_TMP=false
@@ -23,16 +16,16 @@ fi
 
 # Install php-redis module (if not installed yet)
 if [ ! "$(php -m | grep redis)" ]; then
-    if [[ $PHP_VERSION == *"7."* ]]; then
-        yes '' | pecl install -f redis
-    else
-        yes '' | pecl install -f redis-2.2.8
-    fi
+    wget https://github.com/FriendsOfPHP/pickle/releases/latest/download/pickle.phar -O /tmp/pickle.phar
+    php /tmp/pickle.phar install redis --defaults --save-logs
+    rm /tmp/pickle.phar
 fi
 
+PHP_INI_FOLDER=$(php -r "echo PHP_CONFIG_FILE_SCAN_DIR;")
+
 # Enable redis php extension in custom php.ini (if not enabled yet)
-if [ ! "$(cat /usr/local/lib/php.conf.d/20-custom.ini | grep redis.so)" ]; then
-    echo -e "\n; Redis\nextension=redis.so" >> /usr/local/lib/php.conf.d/20-custom.ini
+if [ ! -f "$PHP_INI_FOLDER/99-redis.ini" ]; then
+    echo -e "\n; Redis\nextension=redis.so" >> "$PHP_INI_FOLDER/99-redis.ini"
 fi
 
 # Restart apache
